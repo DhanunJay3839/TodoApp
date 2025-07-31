@@ -45,7 +45,7 @@ const HomeScreen = () => {
 
   const handleDeleteTask = async (taskId) => {
   try {
-    await axios.delete(`https://ff1d053aea2e.ngrok-free.app/DeleteTask/${taskId}`);
+    await axios.delete(`https://a3671386b040.ngrok-free.app/DeleteTask/${taskId}`);
     setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId)); // Remove from local list
   } catch (error) {
     console.error('Failed to delete task:', error);
@@ -54,8 +54,12 @@ const HomeScreen = () => {
 };
 
 
-  const convertTo24Hour = (time12h) => {
+ const convertTo24Hour = (time12h) => {
+  if (!time12h) return '00:00'; 
+
   const [time, modifier] = time12h.split(' ');
+  if (!time || !modifier) return '00:00';
+
   let [hours, minutes] = time.split(':');
 
   if (hours === '12') {
@@ -71,9 +75,10 @@ const HomeScreen = () => {
 
 
 
+
   const fetchTasks = async () => {
     try {
-      const response = await axios.get('https://ff1d053aea2e.ngrok-free.app/getAllTasks');
+      const response = await axios.get('https://a3671386b040.ngrok-free.app/getAllTasks');
       const sortedTasks = response.data.sort((a, b) => {
         const aDate = new Date(`${a.dueDate} ${a.duetime}`);
         const bDate = new Date(`${b.dueDate} ${b.duetime}`);
@@ -150,14 +155,17 @@ const HomeScreen = () => {
   paddingVertical: 6,
   borderRadius: 10,
   backgroundColor:
-    (taskStatuses[task.id] || 'Pending') === 'Completed'
+    (taskStatuses[task.id] || task.status || 'Pending'
+) === 'Completed'
       ? '#10B981'  
-      : (taskStatuses[task.id] || 'Pending') === 'In Progress'
+      : (taskStatuses[task.id] || task.status || 'Pending'
+) === 'In Progress'
       ? '#3B82F6'  
       : '#111827', 
 }}>
   <Text style={{ fontSize: 16, color: '#FFFFFF' }}>
-    {(taskStatuses[task.id] || 'Pending')} ▼
+    {(taskStatuses[task.id] || task.status || 'Pending'
+)} ▼
   </Text>
 </View>
 
@@ -179,18 +187,26 @@ const HomeScreen = () => {
       }}
     >
       {['Pending', 'In Progress', 'Completed'].map((option) => (
-        <TouchableOpacity
-          key={option}
-          onPress={() => {
-  setTaskStatuses(prev => ({ ...prev, [task.id]: option }));
-  setActiveDropdownId(null);
-}}
+  <TouchableOpacity
+    key={option}
+    onPress={async () => {
+      try {
+        await axios.put(`https://a3671386b040.ngrok-free.app/updateTaskStatus/${task.id}`, {
+          status: option
+        });
+        setTaskStatuses(prev => ({ ...prev, [task.id]: option }));
+        setActiveDropdownId(null);
+      } catch (error) {
+        console.error('Failed to update status:', error);
+        alert('Failed to update task status');
+      }
+    }}
+    style={{ padding: 10 }}
+  >
+    <Text style={{ fontSize: 16 }}>{option}</Text>
+  </TouchableOpacity>
+))}
 
-          style={{ padding: 10 }}
-        >
-          <Text style={{ fontSize: 16 }}>{option}</Text>
-        </TouchableOpacity>
-      ))}
     </View>
   )}
 </View>
