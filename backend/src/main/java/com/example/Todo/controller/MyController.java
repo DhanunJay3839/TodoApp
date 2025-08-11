@@ -1,7 +1,10 @@
 package com.example.Todo.controller;
 
+import com.example.Todo.entity.Login;
 import com.example.Todo.entity.Todo;
+import com.example.Todo.repo.TodoRepo;
 import com.example.Todo.service.TodoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +17,30 @@ import java.util.Optional;
 public class MyController {
 
     @Autowired private TodoService todoService;
+
+    @Autowired private TodoRepo repo;
+
+    @PostMapping("/createAccount")
+    public String CreateAccount(@Valid @RequestBody Login login)
+    {
+        Login createdAccount = todoService.AddAccount(login);
+        if (createdAccount != null) {
+            return "Account created successfully!";
+        } else {
+            return "Failed to create account.";
+        }
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestBody Login login) {
+        String email = login.getEmail();
+        Login existingAccount = todoService.getAccountByEmail(login, email);
+        if (existingAccount != null) {
+            return "Login successful!";
+        } else {
+            return "Invalid email or password.";
+        }
+    }
 
     @PostMapping("/addTask")
     public String addTask(@RequestBody Todo todo)
@@ -38,12 +65,6 @@ public class MyController {
         return "Task deleted successfully!";
     }
 
-    @DeleteMapping("/DeleteTask/{id}")
-    public String deleteTask(@PathVariable Long id) {
-        todoService.deleteTask(id);
-        return "Task deleted successfully!";
-    }
-
 
     @PutMapping("/updateTaskStatus/{id}")
     public String updateStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
@@ -57,5 +78,6 @@ public class MyController {
             return "Task not found";
         }
     }
+
 
 }

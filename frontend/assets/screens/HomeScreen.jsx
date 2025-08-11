@@ -2,6 +2,7 @@ import {StyleSheet, Text, View,Image,TextInput, TouchableOpacity,FlatList,option
 import React, { useState } from 'react'
 import axios from 'axios';
 import { useIsFocused } from '@react-navigation/native';
+import { BASE_URL } from '../api';
 import { useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -45,8 +46,8 @@ const HomeScreen = () => {
 
   const handleDeleteTask = async (taskId) => {
   try {
-    await axios.delete(`https://a3671386b040.ngrok-free.app/DeleteTask/${taskId}`);
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId)); // Remove from local list
+    await axios.delete(`${BASE_URL}/DeleteTask/${taskId}`);
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
   } catch (error) {
     console.error('Failed to delete task:', error);
     alert('Error deleting task. Please try again.');
@@ -62,7 +63,7 @@ const HomeScreen = () => {
 
   let [hours, minutes] = time.split(':');
 
-  if (hours === '12') {
+  if (hours === '12') { 
     hours = '00';
   }
 
@@ -73,12 +74,9 @@ const HomeScreen = () => {
   return `${hours.padStart(2, '0')}:${minutes}`;
 };
 
-
-
-
   const fetchTasks = async () => {
     try {
-      const response = await axios.get('https://a3671386b040.ngrok-free.app/getAllTasks');
+      const response = await axios.get(`${BASE_URL}/getAllTasks`);
       const sortedTasks = response.data.sort((a, b) => {
         const aDate = new Date(`${a.dueDate} ${a.duetime}`);
         const bDate = new Date(`${b.dueDate} ${b.duetime}`);
@@ -87,7 +85,7 @@ const HomeScreen = () => {
       setTasks(sortedTasks);
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
-      alert('Unable to fetch tasks. Please make sure your Spring Boot server is running.');
+      alert('Unable to fetch tasks , Please make sure your Spring Boot server is running');
     }
   };
 
@@ -98,7 +96,9 @@ const HomeScreen = () => {
 
             <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:12}}>
                 <Text style={{fontSize:24,fontWeight:'400',color:'#111827'}}>My Tasks</Text>
+                <TouchableOpacity onPress={() => {navigation.navigate('Logout')}}>
                <Image source={require('../Images/starboyypf.jpeg')} style={{ height: 32, width: 32, borderRadius: 16 }}/>
+               </TouchableOpacity>
             </View>
 
             <TouchableOpacity onPress={Handlepress}>
@@ -115,12 +115,12 @@ const HomeScreen = () => {
               </View>
             </View>
             </TouchableOpacity>
-            <View style={{paddingBottom:20,marginTop: 30}}>
+            <View style={{paddingBottom:10,marginTop: 15}}>
             <Text style={{ fontSize: 16, fontWeight: '400', color: '#6B7280',marginLeft:10}}>Upcoming Tasks</Text>
             </View>
 
             <View style={{flex: 1 ,backgroundColor:'white',width:'100%'}}>
-              <ScrollView contentContainerStyle={{  paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+              <ScrollView contentContainerStyle={{  paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
           
           
    {tasks.map((task, index) => (
@@ -130,10 +130,9 @@ const HomeScreen = () => {
       height: 255,
       width: '100%',
       borderRadius: 16,
-      borderBottomWidth:0.5,
+      borderBottomWidth:1,
       borderBottomColor:'#9CA3AF',
       backgroundColor: 'white',
-      marginTop: 1,
       paddingHorizontal: 15,
     }}
   >
@@ -143,7 +142,7 @@ const HomeScreen = () => {
     <Text style={{ fontSize: 24, color: '#1A1A1A', fontWeight: '500'}}>
       {task.taskname}
     </Text>
-     </View>
+    </View>
      <View style={{ position: 'relative', marginTop: 20  }}>
  <TouchableOpacity onPress={() => {
   setActiveDropdownId(activeDropdownId === task.id ? null : task.id);
@@ -191,7 +190,7 @@ const HomeScreen = () => {
     key={option}
     onPress={async () => {
       try {
-        await axios.put(`https://a3671386b040.ngrok-free.app/updateTaskStatus/${task.id}`, {
+        await axios.put(`${BASE_URL}/updateTaskStatus/${task.id}`, {
           status: option
         });
         setTaskStatuses(prev => ({ ...prev, [task.id]: option }));
@@ -246,22 +245,34 @@ const HomeScreen = () => {
   </View>
   <View
     style={{
-      height: 33,
+      height: 30,
+      borderWidth:1,
+      borderColor:
+          task.priority === 'High'
+            ? '#FF4D4F'
+            : task.priority === 'Medium'
+            ? '#F59E0B'
+            : '#10B981',
       paddingHorizontal: 15,
       borderRadius: 20,
-      backgroundColor:
-        task.priority === 'High'
-          ? '#FF4D4F'
-          : task.priority === 'Medium'
-          ? '#F59E0B'
-          : '#10B981',
       justifyContent: 'center',
       alignItems: 'center',
-      
+      marginTop:5,
       marginLeft:10
     }}
   >
-    <Text style={{ fontSize: 14, color: 'white', fontWeight: '400' }}>
+    <Text
+      style={{
+        fontSize: 14,
+        fontWeight: '400',
+        color:
+          task.priority === 'High'
+            ? '#FF4D4F'
+            : task.priority === 'Medium'
+            ? '#F59E0B'
+            : '#10B981',
+      }}
+    >
       {task.priority}
     </Text>
   </View>
